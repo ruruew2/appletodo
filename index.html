@@ -145,14 +145,14 @@
             background: var(--card);
             border: 1.5px solid var(--border);
             border-radius: 16px;
-            padding: 14px 16px; 
+            padding: 14px 16px;
             margin-bottom: 16px;
             box-shadow: 0 2px 10px var(--shadow);
             transition: border-color 0.2s, background 0.3s;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            overflow: visible; /* ← 추가 */
+            overflow: hidden; /* ← 추가 */
         }
         .add-card:focus-within { border-color: var(--accent); }
 
@@ -171,22 +171,21 @@
             outline: none;
         }
         .add-card-top input::placeholder { color: var(--muted); }
-        .add-card-top button {
-            padding: 20px 16px;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 10px 0 0 10px;
-            font-family: 'Gasoek One', cursive;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: opacity 0.2s, background 0.3s;
-            white-space: nowrap;
-            flex-shrink: 0;
-            margin-right: -16px;
-            
-        }
+.add-card-top button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 50%;      /* 동그랗게 */
+    cursor: pointer;
+    transition: opacity 0.2s, background 0.3s;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;       /* + 아이콘 크기 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
         .add-card-top button:hover { opacity: 0.85; }
 
         .add-card-divider {
