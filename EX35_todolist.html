@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA 설정 -->
+    <meta name="apple-mobile-web-app-title" content="TO-DO">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#fdf6ec">
+    <title>TO-DO LIST</title>
+    <link href="https://fonts.googleapis.com/css2?family=Gasoek+One&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:        #fdf6ec;
+            --card:      #fff;
+            --ink:       #1a1008;
+            --muted:     #a89880;
+            --accent:    #e8572a;
+            --done:      #dadada;
+            --border:    #e8ddd0;
+            --shadow:    rgba(100,60,20,0.10);
+            --memo-1:    #d3a2ff;
+            --memo-2:    #ffaec9;
+            --memo-3:    #acb1fd;
+            --memo-4:    #8eff9d;
+        }
+        body.dark {
+            --bg:        #1a1520;
+            --card:      #252030;
+            --ink:       #f0e8f5;
+            --muted:     #8a7a99;
+            --accent:    #f06292;
+            --done:      #6a5a7a;
+            --border:    #3a3048;
+            --shadow:    rgba(0,0,0,0.3);
+            --memo-1:    #7a4aaa;
+            --memo-2:    #aa4a6a;
+            --memo-3:    #4a4aaa;
+            --memo-4:    #2a7a3a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            font-family: 'Noto Sans KR', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 56px 16px 80px;
+            transition: background 0.3s, color 0.3s;
+        }
+        .theme-btn {
+            position: fixed;
+            top: 10px; right: 20px;
+            background: var(--card);
+            border: 1.0px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 100;
+        }
+        .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+        h1 {
+            font-family: 'Gasoek One', cursive;
+            font-size: clamp(2.2rem, 6vw, 3.6rem);
+            letter-spacing: 6px;
+            color: var(--ink);
+            margin-bottom: 4px;
+            transition: color 0.3s;
+        }
+        .sub {
+            font-size: 0.75rem;
+            color: var(--muted);
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+
+        /* 진행률 바 */
+        .progress-wrap {
+            width: 100%;
+            max-width: 520px;
+            margin-bottom: 28px;
+        }
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 99px;
+            transition: width 0.4s cubic-bezier(0.34,1.2,0.64,1), background 0.3s;
+            width: 0%;
+        }
+
+        /* 검색 */
+        .search-row {
+            width: 100%;
+            max-width: 520px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+        .search-row input {
+            width: 100%;
+            padding: 10px 16px 10px 36px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            background: var(--card);
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.85rem;
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.2s, background 0.3s;
+        }
+        .search-row input:focus { border-color: var(--accent); }
+        .search-row input::placeholder { color: var(--muted); }
+        .search-icon {
+            position: absolute;
+            left: 12px; top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.85rem;
+            color: var(--muted);
+            pointer-events: none;
+        }
+
+        /* 통합 입력 카드 */
+        .add-card {
+            width: 100%;
+            max-width: 520px;
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px var(--shadow);
+            transition: border-color 0.2s, background 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .add-card:focus-within { border-color: var(--accent); }
+
+        .add-card-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .add-card-top input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.95rem;
+            color: var(--ink);
+            outline: none;
+        }
+        .add-card-top input::placeholder { color: var(--muted); }
+        .add-card-top button {
+            padding: 8px 18px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Gasoek One', cursive;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: opacity 0.2s, background 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .add-card-top button:hover { opacity: 0.85; }
+
+        .add-card-divider {
+            height: 1px;
+            background: var(--border);
+        }
+
+        .add-card-bottom {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .add-card-bottom label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+        .add-card-bottom input[type="date"] {
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.78rem;
+            outline: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .add-card-bottom input[type="date"]:focus { color: var(--ink); }
+
+        .filters {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+        .filters button {
+            padding: 6px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            background: transparent;
+            color: var(--muted);
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .filters button.active {
+            background: var(--ink);
+            color: var(--bg);
+            border-color: var(--ink);
+        }
+
+        .todo-list {
+            width: 100%;
+            max-width: 520px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 10px var(--shadow);
+            animation: slideIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+            transition: background 0.3s, border-color 0.3s;
+            cursor: grab;
+        }
+        .todo-item:active { cursor: grabbing; }
+        .todo-item.dragging {
+            opacity: 0.4;
+            border: 2px dashed var(--accent);
+        }
+        .todo-item.drag-over {
+            border-color: var(--accent);
+            background: rgba(232,87,42,0.05);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .todo-item input[type="checkbox"] {
+            appearance: none;
+            width: 20px; height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.18s;
+            position: relative;
+        }
+        .todo-item input[type="checkbox"]:checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .todo-item input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .todo-main { flex: 1; min-width: 0; }
+        .todo-text {
+            font-size: 0.95rem;
+            color: var(--ink);
+            transition: all 0.2s;
+            word-break: break-all;
+        }
+        .todo-item.done .todo-text {
+            text-decoration: line-through;
+            color: var(--done);
+        }
+
+        /* 디데이 뱃지 */
+        .dday-badge {
+            font-size: 0.65rem;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-top: 4px;
+            display: inline-block;
+            font-weight: 700;
+        }
+        .dday-over   { background: #fde8e0; color: #e8572a; }
+        .dday-today  { background: #fff3cd; color: #b8860b; }
+        .dday-soon   { background: #e8f5e9; color: #2e7d32; }
+        .dday-normal { background: var(--border); color: var(--muted); }
+
+        .del-btn {
+            background: none;
+            border: none;
+            color: var(--border);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 6px;
+            transition: color 0.18s, background 0.18s;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .del-btn:hover { color: var(--accent); background: rgba(240,98,146,0.1); }
+
+        .summary {
+            margin-top: 24px;
+            font-size: 0.78rem;
+            color: var(--muted);
+            letter-spacing: 1px;
+            transition: color 0.3s;
+            text-align: center;  /* ← 이거 추가 */
+        }
+        .empty {
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.85rem;
+            padding: 32px 0;
+        }
+
+        /* confetti canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* ══ 메모 섹션 ══ */
+        .memo-section {
+            width: 100%;
+            max-width: 520px;
+            margin-top: 56px;
+        }
+        .memo-section-title {
+            font-family: 'Gasoek One', cursive;
+            font-size: 1.3rem;
+            letter-spacing: 4px;
+            color: var(--ink);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s;
+        }
+        .memo-section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+        .memo-input-box {
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 28px;
+            box-shadow: 3px 3px 0 var(--border);
+            transition: background 0.3s;
+        }
+        .memo-input-box textarea {
+            width: 100%;
+            min-height: 80px;
+            border: none;
+            background: transparent;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 1rem;
+            color: var(--ink);
+            resize: none;
+            outline: none;
+            line-height: 1.7;
+        }
+        .memo-input-box textarea::placeholder { color: var(--muted); }
+        .memo-input-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .color-picks { display: flex; gap: 6px; }
+        .color-pick {
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.15s;
+        }
+        .color-pick:hover { transform: scale(1.2); }
+        .color-pick.selected { border-color: var(--ink); }
+        .color-pick.c1 { background: #d3a2ff; }
+        .color-pick.c2 { background: #ffaec9; }
+        .color-pick.c3 { background: #acb1fd; }
+        .color-pick.c4 { background: #8eff9d; }
+        .memo-add-btn {
+            padding: 6px 18px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: opacity 0.2s, background 0.3s;
+        }
+        .memo-add-btn:hover { opacity: 0.85; }
+
+        .memo-log { display: flex; flex-direction: column; gap: 32px; }
+        .memo-date-label {
+            font-size: 0.72rem;
+            color: var(--muted);
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .memo-date-label::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+        .memo-date-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+        .memo-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .memo-card {
+            position: relative;
+            width: calc((100% - 32px) / 3);
+            min-height: 160px;
+            border-radius: 4px;
+            padding: 28px 12px 14px;
+            box-shadow: 3px 5px 10px var(--shadow), 2px 2px 0 rgba(0,0,0,0.08);
+            animation: memoIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            transition: background 0.3s, transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .memo-card:nth-child(odd)  { transform: rotate(-1.2deg); }
+        .memo-card:nth-child(even) { transform: rotate(1deg); }
+        .memo-card:hover { transform: rotate(0deg) scale(1.05) translateY(-4px) !important; z-index: 10; }
+        @keyframes memoIn {
+            from { opacity: 0; transform: rotate(-3deg) scale(0.9); }
+            to   { opacity: 1; }
+        }
+        .memo-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 40px; height: 14px;
+            background: rgba(255,255,255,0.45);
+            border-radius: 0 0 4px 4px;
+        }
+        .memo-card-text {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.9rem;
+            color: var(--ink);
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-all;
+            flex: 1;
+            transition: color 0.3s;
+        }
+
+        /* 메모 수정 textarea */
+        .memo-edit-area {
+            width: 100%;
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.9rem;
+            color: var(--ink);
+            resize: none;
+            outline: none;
+            line-height: 1.65;
+            min-height: 80px;
+        }
+        .memo-card-footer {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            margin-top: 10px;
+        }
+        .memo-card-time {
+            font-size: 0.62rem;
+            color: var(--muted);
+            letter-spacing: 0.5px;
+        }
+        .memo-btn-row {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .memo-card:hover .memo-btn-row { opacity: 1; }
+        .memo-del-btn, .memo-edit-btn, .memo-save-btn {
+            background: none;
+            border: none;
+            font-size: 0.68rem;
+            cursor: pointer;
+            padding: 1px 5px;
+            border-radius: 4px;
+            transition: color 0.18s, background 0.18s;
+            color: var(--muted);
+        }
+        .memo-del-btn:hover  { color: #e8572a; }
+        .memo-edit-btn:hover { color: #3a86ff; }
+        .memo-save-btn { color: #2e7d32; }
+        .memo-save-btn:hover { background: rgba(46,125,50,0.1); }
+
+        .memo-card.c1 { background: var(--memo-1); }
+        .memo-card.c2 { background: var(--memo-2); }
+        .memo-card.c3 { background: var(--memo-3); }
+        .memo-card.c4 { background: var(--memo-4); }
+
+        .memo-input-box.c1 { background: #d3a2ff55; }
+        .memo-input-box.c2 { background: #ffaec955; }
+        .memo-input-box.c3 { background: #acb1fd55; }
+        .memo-input-box.c4 { background: #8eff9d55; }
+
+        /* ══ 모바일 하단 네비게이션 ══ */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--card);
+            border-top: 1.5px solid var(--border);
+            padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+            z-index: 200;
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .bottom-nav-inner { display: flex; justify-content: space-around; align-items: center; }
+        .nav-btn {
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            background: none; border: none; cursor: pointer;
+            padding: 6px 20px; border-radius: 12px; color: var(--muted); transition: color 0.15s;
+        }
+        .nav-btn.active { color: var(--accent); }
+        .nav-btn-icon { font-size: 1.4rem; }
+        .nav-btn-label { font-size: 0.6rem; font-family: 'Noto Sans KR', sans-serif; letter-spacing: 1px; }
+        .section { display: block; }
+
+        @media (max-width: 600px) {
+            body { padding: 20px 14px 90px; align-items: stretch; }
+            .theme-btn {
+                top: 25px; right: 14px; padding: 0;
+                width: 38px; height: 38px; border-radius: 50%;
+                display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+            }
+            .theme-btn-text { display: none; }
+            h1 { font-size: 2rem; letter-spacing: 4px; }
+            .sub { font-size: 0.68rem; margin-bottom: 16px; }
+            .progress-wrap, .search-row, .input-row,
+            .deadline-row, .todo-list, .memo-section { max-width: 100%; }
+            .add-card { border-radius: 14px; }
+            .add-card-top input { font-size: 1rem; }
+            .add-card-top button { padding: 10px 14px; }
+            .filters { justify-content: stretch; }
+            .filters button { flex: 1; text-align: center; padding: 8px 0; }
+            .todo-item { padding: 14px 12px; gap: 10px; }
+            .todo-item input[type="checkbox"] { width: 22px; height: 22px; }
+            .todo-text { font-size: 1rem; }
+            .memo-card { width: calc((100% - 12px) / 2); min-height: 130px; }
+            .memo-cards { gap: 12px; }
+            .memo-btn-row { opacity: 1 !important; }
+            .bottom-nav { display: block; }
+            .section { display: none; }
+            .section.active { display: block; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙 <span class="theme-btn-text">다크모드</span></button>
+
+    <h1>TO-DO LIST</h1>
+    <p class="sub">오늘 할 일을 적어보세요</p>
+
+
+        <br>
+
+        
+    <div class="section active" id="section-todo">
+        <br>
+    <!-- 진행률 바 -->
+    <div class="progress-wrap">
+        <div class="progress-info">
+            <span id="progressLabel">진행률 0%</span>
+            <span id="progressCount">0 / 0 완료</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+
+    <!-- 검색 -->
+    <div class="search-row">
+        <span class="search-icon">💭</span>
+        <input type="text" id="searchInput" placeholder="할 일 검색..." oninput="render()">
+    </div>
+
+    <!-- 통합 입력 카드 -->
+    <div class="add-card">
+        <div class="add-card-top">
+            <input type="text" id="todoInput" placeholder="할 일을 입력하세요..." maxlength="60">
+            <button onclick="addTodo()">추가</button>
+        </div>
+        <div class="add-card-divider"></div>
+        <div class="add-card-bottom">
+            <label>📅 마감일</label>
+            <input type="date" id="deadlineInput">
+        </div>
+    </div>
+
+
+        <br>    <br>
+
+    <div class="filters">
+        <button class="active" onclick="setFilter('all', this)">전체</button>
+        <button onclick="setFilter('active', this)">미완료</button>
+        <button onclick="setFilter('done', this)">완료</button>
+    </div>
+
+    
+
+    <ul class="todo-list" id="todoList"></ul>
+    <p class="summary" id="summary"></p>
+    </div><!-- /section-todo -->
+
+    <!-- 메모 섹션 -->
+    <div class="memo-section section" id="section-memo">
+        <h2 class="memo-section-title">✒️ MEMO LOG</h2>
+        <div class="memo-input-box c1" id="memoInputBox">
+            <textarea id="memoText" placeholder="오늘의 메모를 남겨보세요... (Ctrl+Enter로 추가)"></textarea>
+            <div class="memo-input-footer">
+                <div class="color-picks">
+                    <div class="color-pick c1 selected" onclick="selectColor('c1', this)"></div>
+                    <div class="color-pick c2" onclick="selectColor('c2', this)"></div>
+                    <div class="color-pick c3" onclick="selectColor('c3', this)"></div>
+                    <div class="color-pick c4" onclick="selectColor('c4', this)"></div>
+                </div>
+                <button class="memo-add-btn" onclick="addMemo()">붙이기 📌</button>
+            </div>
+        </div>
+        <div class="memo-log" id="memoLog"></div>
+    </div>
+
+<script>
+// ════════════════════════════
+//  TO-DO
+// ════════════════════════════
+let todos  = JSON.parse(localStorage.getItem('todos'))  || [];
+let filter = 'all';
+let isDark = localStorage.getItem('darkMode') === 'true';
+let dragSrcId = null;
+
+// 다크모드 초기화
+if (isDark) {
+    document.body.classList.add('dark');
+    document.getElementById('themeBtn').textContent = '☀️ 라이트모드';
+}
+
+function toggleTheme() {
+    isDark = !isDark;
+    document.body.classList.toggle('dark', isDark);
+    document.getElementById('themeBtn').innerHTML = isDark ? '☀️ <span class="theme-btn-text">라이트모드</span>' : '🌙 <span class="theme-btn-text">다크모드</span>';
+    localStorage.setItem('darkMode', isDark);
+}
+
+function saveTodos() { localStorage.setItem('todos', JSON.stringify(todos)); }
+
+function addTodo() {
+    const input    = document.getElementById('todoInput');
+    const deadline = document.getElementById('deadlineInput').value;
+    const text     = input.value.trim();
+    if (!text) return;
+    todos.push({ id: Date.now(), text, done: false, deadline: deadline || null });
+    input.value = '';
+    document.getElementById('deadlineInput').value = '';
+    saveTodos();
+    render();
+}
+
+function toggleTodo(id) {
+    todos = todos.map(t => t.id === id ? { ...t, done: !t.done } : t);
+    saveTodos();
+    const t = todos.find(t => t.id === id);
+    if (t && t.done) fireConfetti();
+    render();
+}
+
+function deleteTodo(id) {
+    todos = todos.filter(t => t.id !== id);
+    saveTodos();
+    render();
+}
+
+function setFilter(f, btn) {
+    filter = f;
+    document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+}
+
+function getDdayBadge(deadline) {
+    if (!deadline) return '';
+    const today = new Date(); today.setHours(0,0,0,0);
+    const due   = new Date(deadline);
+    const diff  = Math.round((due - today) / 86400000);
+    let cls, label;
+    if (diff < 0)       { cls = 'dday-over';   label = `D+${Math.abs(diff)} 초과`; }
+    else if (diff === 0){ cls = 'dday-today';  label = 'D-DAY'; }
+    else if (diff <= 3) { cls = 'dday-soon';   label = `D-${diff}`; }
+    else                { cls = 'dday-normal'; label = `D-${diff}`; }
+    return `<span class="dday-badge ${cls}">${label}</span>`;
+}
+
+function render() {
+    const list    = document.getElementById('todoList');
+    const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+    const emptyMsg = keyword ? '검색 결과가 없어요 ✒️'
+            : filter === 'done'   ? '완료된 목록이 없어요 🥹'
+            : filter === 'active' ? '미완료 항목이 없어요 🎉'
+            : '아직 할 일이 없어요 ✨';
+
+    let filtered = todos.filter(t => {
+        if (filter === 'active') return !t.done;
+        if (filter === 'done')   return  t.done;
+        return true;
+    });
+
+    if (keyword) {
+        filtered = filtered.filter(t => t.text.toLowerCase().includes(keyword));
+    }
+
+    if (filtered.length === 0) {
+        list.innerHTML = `<p class="empty">${emptyMsg}</p>`;
+    } else {
+        list.innerHTML = filtered.map(t => `
+            <li class="todo-item ${t.done ? 'done' : ''}"
+                draggable="true"
+                data-id="${t.id}"
+                ondragstart="onDragStart(event)"
+                ondragover="onDragOver(event)"
+                ondrop="onDrop(event)"
+                ondragleave="onDragLeave(event)"
+                ondragend="onDragEnd(event)">
+                <input type="checkbox" ${t.done ? 'checked' : ''}
+                    onchange="toggleTodo(${t.id})">
+                <div class="todo-main">
+                    <div class="todo-text">${t.text}</div>
+                    ${getDdayBadge(t.deadline)}
+                </div>
+                <button class="del-btn" onclick="deleteTodo(${t.id})">✕</button>
+            </li>
+        `).join('');
+    }
+
+    // 진행률
+    const total    = todos.length;
+    const done     = todos.filter(t => t.done).length;
+    const pct      = total === 0 ? 0 : Math.round(done / total * 100);
+    document.getElementById('progressFill').style.width  = pct + '%';
+    document.getElementById('progressLabel').textContent = `진행률 ${pct}%`;
+    document.getElementById('progressCount').textContent = `${done} / ${total} 완료`;
+    document.getElementById('summary').textContent =
+        `전체 ${total}개 · 완료 ${done}개 · 미완료 ${total - done}개`;
+}
+
+// ── 드래그앤드롭 ──
+function onDragStart(e) {
+    dragSrcId = parseInt(e.currentTarget.dataset.id);
+    e.currentTarget.classList.add('dragging');
+}
+function onDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+}
+function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function onDrop(e) {
+    e.preventDefault();
+    const targetId = parseInt(e.currentTarget.dataset.id);
+    if (dragSrcId === targetId) return;
+    const srcIdx = todos.findIndex(t => t.id === dragSrcId);
+    const tgtIdx = todos.findIndex(t => t.id === targetId);
+    const [moved] = todos.splice(srcIdx, 1);
+    todos.splice(tgtIdx, 0, moved);
+    saveTodos();
+    render();
+}
+function onDragEnd(e) {
+    document.querySelectorAll('.todo-item').forEach(el => {
+        el.classList.remove('dragging', 'drag-over');
+    });
+}
+
+// ── Confetti ──
+function fireConfetti() {
+    const canvas  = document.getElementById('confetti-canvas');
+    const ctx     = canvas.getContext('2d');
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const pieces = Array.from({ length: 120 }, () => ({
+        x: Math.random() * canvas.width,
+        y: -10,
+        r: Math.random() * 6 + 3,
+        color: ['#f06292','#d3a2ff','#acb1fd','#8eff9d','#ffaec9','#ffd54f'][Math.floor(Math.random()*6)],
+        vx: (Math.random() - 0.5) * 4,
+        vy: Math.random() * 4 + 2,
+        alpha: 1
+    }));
+
+    let frame;
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        pieces.forEach(p => {
+            if (p.alpha <= 0) return;
+            alive = true;
+            p.x += p.vx; p.y += p.vy; p.alpha -= 0.012;
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle   = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        if (alive) frame = requestAnimationFrame(draw);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    cancelAnimationFrame(frame);
+    draw();
+}
+
+document.getElementById('todoInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTodo();
+});
+
+// ════════════════════════════
+//  MEMO
+// ════════════════════════════
+let memos         = JSON.parse(localStorage.getItem('memos')) || [];
+let selectedColor = 'c1';
+
+function saveMemos() { localStorage.setItem('memos', JSON.stringify(memos)); }
+
+function selectColor(color, el) {
+    selectedColor = color;
+    document.querySelectorAll('.color-pick').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('memoInputBox').className = `memo-input-box ${color}`;
+}
+
+function addMemo() {
+    const text = document.getElementById('memoText').value.trim();
+    if (!text) return;
+    const now = new Date();
+    memos.push({
+        id:    Date.now(),
+        text,
+        color: selectedColor,
+        date:  now.toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' }),
+        time:  now.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' })
+    });
+    document.getElementById('memoText').value = '';
+    saveMemos();
+    renderMemo();
+}
+
+function deleteMemo(id) {
+    memos = memos.filter(m => m.id !== id);
+    saveMemos();
+    renderMemo();
+}
+
+function startEdit(id) {
+    const card = document.querySelector(`.memo-card[data-id="${id}"]`);
+    const textEl = card.querySelector('.memo-card-text');
+    const text   = textEl.textContent;
+    textEl.style.display = 'none';
+
+    const ta = document.createElement('textarea');
+    ta.className = 'memo-edit-area';
+    ta.value = text;
+    card.insertBefore(ta, textEl);
+    ta.focus();
+
+    const btnRow = card.querySelector('.memo-btn-row');
+    btnRow.innerHTML = `<button class="memo-save-btn" onclick="saveEdit(${id})">저장</button>
+                        <button class="memo-del-btn" onclick="deleteMemo(${id})">삭제</button>`;
+}
+
+function saveEdit(id) {
+    const card = document.querySelector(`.memo-card[data-id="${id}"]`);
+    const ta   = card.querySelector('.memo-edit-area');
+    const newText = ta.value.trim();
+    if (!newText) return;
+    memos = memos.map(m => m.id === id ? { ...m, text: newText } : m);
+    saveMemos();
+    renderMemo();
+}
+
+function renderMemo() {
+    const log = document.getElementById('memoLog');
+    const groups = {};
+    memos.forEach(m => {
+        if (!groups[m.date]) groups[m.date] = [];
+        groups[m.date].push(m);
+    });
+    const dates = Object.keys(groups).reverse();
+
+    if (dates.length === 0) {
+        log.innerHTML = '<p class="empty" style="text-align:center;padding:20px 0;">메모가 없어요 ✏️</p>';
+        return;
+    }
+
+    log.innerHTML = dates.map(date => `
+        <div class="memo-date-group">
+            <div class="memo-date-label">${date}</div>
+            <div class="memo-cards">
+                ${groups[date].map(m => `
+                    <div class="memo-card ${m.color}" data-id="${m.id}">
+                        <p class="memo-card-text">${m.text}</p>
+                        <div class="memo-card-footer">
+                            <span class="memo-card-time">${m.time}</span>
+                            <div class="memo-btn-row">
+                                <button class="memo-edit-btn" onclick="startEdit(${m.id})">수정</button>
+                                <button class="memo-del-btn" onclick="deleteMemo(${m.id})">삭제</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+document.getElementById('memoText').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.ctrlKey) addMemo();
+});
+
+
+// ── 모바일 섹션 전환 ──
+function showSection(name, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const target = name === 'todo' ? document.getElementById('section-todo') : document.getElementById('section-memo');
+    if (target) target.classList.add('active');
+    btn.classList.add('active');
+}
+
+// 초기 렌더
+render();
+renderMemo();
+</script>
+    <!-- 모바일 하단 네비게이션 -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-inner">
+            <button class="nav-btn active" onclick="showSection('todo', this)">
+                <span class="nav-btn-icon">✅</span>
+                <span class="nav-btn-label">TO-DO</span>
+            </button>
+            <button class="nav-btn" onclick="showSection('memo', this)">
+                <span class="nav-btn-icon">🗒️</span>
+                <span class="nav-btn-label">MEMO</span>
+            </button>
+        </div>
+    </nav>
+</body>
+</html>
