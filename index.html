@@ -161,7 +161,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding-right: 4px;
+            padding-right: 15px !important;
         }
         .add-card-top input {
             flex: 1;
@@ -177,17 +177,17 @@
     background: var(--accent);
     color: #fff;
     border: none;
-    border-radius: 50%;      /* 동그랗게 */
+    border-radius: 50%;
     cursor: pointer;
-    transition: opacity 0.2s, background 0.3s;
     flex-shrink: 0;
     width: 36px;
     height: 36px;
-    font-size: 1.1rem;       /* + 아이콘 크기 */
+    font-size: 1.1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 5px;
+    /* 사파리에서 잘림 방지를 위해 마진 추가 */
+    margin-right: 5px !important; 
 }
         .add-card-top button:hover { opacity: 0.85; }
 
