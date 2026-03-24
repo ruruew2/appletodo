@@ -157,21 +157,26 @@
 }
         .add-card:focus-within { border-color: var(--accent); }
 
-        .add-card-top {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-right: 25px !important;
-        }
-        .add-card-top input {
-            flex: 1;
-            border: none;
-            background: transparent;
-            font-family: 'Noto Sans KR', sans-serif;
-            font-size: 0.95rem;
-            color: var(--ink);
-            outline: none;
-        }
+.add-card-top {
+    display: flex;
+    align-items: center;
+    /* 여백을 넉넉히 줘서 폰트가 커져도 버튼을 밀지 못하게 방어합니다 */
+    padding-right: 12px !important; 
+    gap: 10px;
+}
+
+.add-card-top input {
+    flex: 1;
+    /* 글자가 길어져도 버튼 영역을 침범하지 못하게 막습니다 */
+    min-width: 0; 
+    border: none;
+    background: transparent;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    outline: none;
+}
+
         .add-card-top input::placeholder { color: var(--muted); }
 .add-card-top button {
     background: var(--accent);
@@ -179,15 +184,16 @@
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    flex-shrink: 0;
+    /* 중요: 버튼 크기가 절대로 변하지 않도록 고정합니다 */
+    flex-shrink: 0; 
     width: 36px;
     height: 36px;
     font-size: 1.1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    /* 사파리에서 잘림 방지를 위해 마진 추가 */
-    margin-right: 15px !important; 
+    /* 사파리에서 글자가 커질 때 밀리는 것을 방지하는 안전장치 */
+    margin-left: auto; 
 }
         .add-card-top button:hover { opacity: 0.85; }
 
