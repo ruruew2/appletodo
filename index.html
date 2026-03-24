@@ -139,21 +139,22 @@
         }
 
         /* 통합 입력 카드 */
-        .add-card {
-            width: 100%;
-            max-width: 520px;
-            background: var(--card);
-            border: 1.5px solid var(--border);
-            border-radius: 16px;
-            padding: 14px 10px 14px 16px;  /* 오른쪽 10px */
-            margin-bottom: 16px;
-            box-shadow: 0 2px 10px var(--shadow);
-            transition: border-color 0.2s, background 0.3s;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            overflow: hidden; /* ← 추가 */
-        }
+.add-card {
+    width: 100%;
+    max-width: 520px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    /* padding의 두 번째 값(오른쪽)을 16px 이상으로 수정하세요 */
+    padding: 14px 20px 14px 16px; 
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px var(--shadow);
+    transition: border-color 0.2s, background 0.3s;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+}
         .add-card:focus-within { border-color: var(--accent); }
 
         .add-card-top {
@@ -186,6 +187,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-right: 5px;
 }
         .add-card-top button:hover { opacity: 0.85; }
 
