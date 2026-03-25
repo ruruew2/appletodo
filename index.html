@@ -737,7 +737,11 @@ function addTodo() {
 }
 
 function toggleTodo(id) {
-    todos = todos.map(t => t.id === id ? { ...t, done: !t.done } : t);
+    todos = todos.map(t => t.id === id ? { 
+        ...t, 
+        done: !t.done,
+        doneAt: !t.done ? Date.now() : null  // ← 완료 시간 저장
+    } : t);
     saveTodos();
     const t = todos.find(t => t.id === id);
     if (t && t.done) fireConfetti();
@@ -771,6 +775,12 @@ function getDdayBadge(deadline) {
 }
 
 function render() {
+    const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+    const before = todos.length;
+    todos = todos.filter(t => 
+        !t.done || !t.doneAt || (Date.now() - t.doneAt < TWELVE_HOURS)
+    );
+    if (todos.length !== before) saveTodos();  // 삭제된 게 있으면 저장
     const list    = document.getElementById('todoList');
     const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
     const emptyMsg = keyword ? '검색 결과가 없어요 ✒️'
